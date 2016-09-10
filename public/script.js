@@ -8,6 +8,7 @@ $(function() {
 
   socket.on('connect', function() {
     console.log('connected to socket on client side');
+    console.log(socket.id);
   });
 
   socket.emit("join", name);
