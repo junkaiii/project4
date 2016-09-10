@@ -12,6 +12,9 @@ app.get('/', function(req, res) {
 
 app.use(express.static('public'));
 
+app.set('port', (process.env.PORT || 3000));
+
+
 io.on('connect', function(socket) {
   console.log('a user connected');
 
