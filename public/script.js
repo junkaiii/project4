@@ -1,5 +1,17 @@
 $(function() {
 
+
+  //Socket ---
+
+  var socket = io();
+  // var name = prompt("Please enter your name");
+
+  socket.on('connect', function() {
+    console.log('connected to socket on client side');
+  });
+
+  socket.emit("join", name);
+
   //Aliases
   var Container = PIXI.Container,
     autoDetectRenderer = PIXI.autoDetectRenderer,
@@ -94,7 +106,6 @@ $(function() {
       //Change the char velocity when the key is pressed
       explorer.vx = -5;
       explorer.vy = 0;
-      console.log('left');
     };
     //Left arrow key `release` method
     left.release = function() {
@@ -144,6 +155,21 @@ $(function() {
 
     //Start the game loop
     gameLoop();
+
+    //Enabling Multiplayer
+    setInterval(function(){
+      socket.emit("movement_x_from_client", explorer.x);
+      socket.emit("movement_y_from_client", explorer.y);
+    }, 50);
+
+      socket.on('movement_x_from_server', function(data) {
+        explorer.x = data;
+      });
+
+      socket.on('movement_y_from_server', function(data) {
+        explorer.y = data;
+      });
+
   }
 
 
@@ -154,7 +180,12 @@ $(function() {
     explorer.y += explorer.vy;
 
     //restricting the area of movement
-    contain(explorer, {x: 28, y: 10, width: 488, height: 480});
+    contain(explorer, {
+      x: 28,
+      y: 10,
+      width: 488,
+      height: 480
+    });
 
   }
 
@@ -169,6 +200,17 @@ $(function() {
     //Render the stage
     renderer.render(stage);
   }
+
+  // function enableMultiplayer(){
+  //   //enabling multiplayer
+  //
+  //   // setInterval(socket.emit("movement_x_from_client", explorer.x), 100);
+  //   // setInterval(socket.emit("movement_y_from_client", explorer.y), 100);
+  //
+  //   socket.emit("movement_x_from_client", explorer.x);
+  //   socket.emit("movement_y_from_client", explorer.y);
+  //
+  // }
 
 
   //The keyboard helper function
@@ -212,35 +254,34 @@ $(function() {
   //Contain helper function
   function contain(sprite, container) {
 
-  var collision = undefined;
+    var collision = undefined;
 
-  //Left
-  if (explorer.x < container.x) {
-    explorer.x = container.x;
-    collision = "left";
+    //Left
+    if (explorer.x < container.x) {
+      explorer.x = container.x;
+      collision = "left";
+    }
+
+    //Top
+    if (explorer.y < container.y) {
+      explorer.y = container.y;
+      collision = "top";
+    }
+
+    //Right
+    if (explorer.x + explorer.width > container.width) {
+      explorer.x = container.width - explorer.width;
+      collision = "right";
+    }
+
+    //Bottom
+    if (explorer.y + explorer.height > container.height) {
+      explorer.y = container.height - explorer.height;
+      collision = "bottom";
+    }
+
+    //Return the `collision` value
+    return collision;
   }
-
-  //Top
-  if (explorer.y < container.y) {
-    explorer.y = container.y;
-    collision = "top";
-  }
-
-  //Right
-  if (explorer.x + explorer.width > container.width) {
-    explorer.x = container.width - explorer.width;
-    collision = "right";
-  }
-
-  //Bottom
-  if (explorer.y + explorer.height > container.height) {
-    explorer.y = container.height - explorer.height;
-    collision = "bottom";
-  }
-
-  //Return the `collision` value
-  return collision;
-}
-
 
 });
