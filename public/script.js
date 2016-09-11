@@ -70,8 +70,6 @@ $(function() {
         console.log(data);
         explorer.x = data[i].x;
         explorer.y = data[i].y;
-        // explorer.x = 250;
-        // explorer.y = 250;
         stage.addChild(explorer);
       }
     });
@@ -83,6 +81,9 @@ $(function() {
   }
 
   function play() {
+
+    explorer.x++;
+    explorer.y++;
 
   }
 
