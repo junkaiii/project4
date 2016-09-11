@@ -4,7 +4,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var axios = require('axios');
 
-var people = {};
+var SOCKET_LIST = {};
+var PLAYER_LIST = {};
 
 app.get('/', function(req, res) {
   res.sendfile('index.html');
@@ -14,25 +15,50 @@ app.use(express.static('public'));
 
 app.set('port', (process.env.PORT || 3000));
 
+var Player = function(id){
+  var self = {
+    x:100,
+    y:100,
+    id:id,
+    number:"" + Math.floor(10 * Math.random()),
+  };
+  return self;
+};
 
 io.on('connect', function(socket) {
-  console.log('a user connected');
+  socket.id = Math.random();
+  SOCKET_LIST[socket.id] = socket;
 
-  socket.on('movement_x_from_client', function(data){
-    io.emit("movement_x_from_server", data);
-  });
+  var player = Player(socket.id);
+  PLAYER_LIST[socket.id] = player;
+  console.log(socket.id + 'has connected');
 
-  socket.on('movement_y_from_client', function(data){
-    io.emit("movement_y_from_server", data);
-  });
+  socket.emit('new player', player);
 
   socket.on('disconnect', function() {
-    console.log(people[socket.id] + ' has disconnected');
-    io.emit('update', people[socket.id] +  'has left the room');
-    delete people[socket.id];
-    io.emit("update-people", people);
+    delete SOCKET_LIST[socket.id];
+    delete PLAYER_LIST[socket.id];
+    console.log(socket.id + ' has disconnected');
   });
 });
+
+setInterval(function(){
+  var pack = [];
+  for (var i in PLAYER_LIST){
+    var player = PLAYER_LIST[i];
+    player.x++;
+    player.y++;
+    pack.push({
+      x: player.x,
+      y: player.y,
+      number: player.number
+    });
+  }
+  for (var j in SOCKET_LIST) {
+    var socket = SOCKET_LIST[j];
+    socket.emit('newPositions', pack);
+  }
+},100);
 
 http.listen(app.get('port'), function() {
   console.log('Express server running at localhost', app.get('port'));
