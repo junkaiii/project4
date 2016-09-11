@@ -5,7 +5,6 @@ var io = require('socket.io')(http);
 var axios = require('axios');
 
 var SOCKET_LIST = {};
-var PLAYER_LIST = {};
 
 app.get('/', function(req, res) {
   res.sendfile('index.html');
@@ -15,50 +14,76 @@ app.use(express.static('public'));
 
 app.set('port', (process.env.PORT || 3000));
 
-var Player = function(id){
-  var self = {
-    x:100,
-    y:100,
-    id:id,
-    number:"" + Math.floor(10 * Math.random()),
-  };
-  return self;
-};
+var SOCKET_LIST = {};
+var PLAYER_LIST = {};
 
-io.on('connect', function(socket) {
-  socket.id = Math.random();
-  SOCKET_LIST[socket.id] = socket;
+io.on('connection', function(socket){
+    console.log('a user disconnected');
+    socket.id = Math.random();
+    SOCKET_LIST[socket.id] = socket;
 
-  var player = Player(socket.id);
-  PLAYER_LIST[socket.id] = player;
-  console.log(socket.id + 'has connected');
+    var player = Player(socket.id);
+    PLAYER_LIST[socket.id] = player;
 
-  socket.emit('new player', player);
+    socket.on('disconnect',function(){
+      console.log('a user disconnected');
+        delete SOCKET_LIST[socket.id];
+        delete PLAYER_LIST[socket.id];
+    });
 
-  socket.on('disconnect', function() {
-    delete SOCKET_LIST[socket.id];
-    delete PLAYER_LIST[socket.id];
-    console.log(socket.id + ' has disconnected');
-  });
+    socket.on('keyPress',function(data){
+        if(data.inputId === 'left')
+            player.pressingLeft = data.state;
+        else if(data.inputId === 'right')
+            player.pressingRight = data.state;
+        else if(data.inputId === 'up')
+            player.pressingUp = data.state;
+        else if(data.inputId === 'down')
+            player.pressingDown = data.state;
+    });
 });
 
+var Player = function(id){
+    var self = {
+        x:250,
+        y:250,
+        id:id,
+        number:"" + Math.floor(10 * Math.random()),
+        pressingRight:false,
+        pressingLeft:false,
+        pressingUp:false,
+        pressingDown:false,
+        maxSpd:10,
+    };
+    self.updatePosition = function(){
+        if(self.pressingRight)
+            self.x += self.maxSpd;
+        if(self.pressingLeft)
+            self.x -= self.maxSpd;
+        if(self.pressingUp)
+            self.y -= self.maxSpd;
+        if(self.pressingDown)
+            self.y += self.maxSpd;
+    };
+    return self;
+};
+
 setInterval(function(){
-  var pack = [];
-  for (var i in PLAYER_LIST){
-    var player = PLAYER_LIST[i];
-    player.x++;
-    player.y++;
-    pack.push({
-      x: player.x,
-      y: player.y,
-      number: player.number
-    });
-  }
-  for (var j in SOCKET_LIST) {
-    var socket = SOCKET_LIST[j];
-    socket.emit('newPositions', pack);
-  }
-},100);
+    var pack = [];
+    for(var i in PLAYER_LIST){
+        var player = PLAYER_LIST[i];
+        player.updatePosition();
+        pack.push({
+            x:player.x,
+            y:player.y,
+            number:player.number
+        });
+    }
+    for(var i in SOCKET_LIST){
+        var socket = SOCKET_LIST[i];
+        socket.emit('newPositions',pack);
+    }
+},1000/25);
 
 http.listen(app.get('port'), function() {
   console.log('Express server running at localhost', app.get('port'));

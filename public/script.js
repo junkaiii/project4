@@ -1,16 +1,15 @@
 $(function() {
 
-
-  //Socket ---
-
   var socket = io();
-  // var name = prompt("Please enter your name");
 
-  socket.on('connect', function() {
-    console.log('connected to socket on client side');
+  socket.on('newPositions', function(data) {
+
   });
 
-  socket.emit("join", name);
+  socket.on('socket id', function(data) {
+    socket_id = data;
+  });
+
 
   //Aliases
   var Container = PIXI.Container,
@@ -21,6 +20,18 @@ $(function() {
     Rectangle = PIXI.Rectangle,
     TextureCache = PIXI.utils.TextureCache;
 
+
+  //Global variables
+  var explorer,
+    convert,
+    treasure,
+    state,
+    socket_id,
+    blob,
+    blobs = {};
+
+
+
   //Create a stage & renderer add add it to the DOM
   var stage = new Container(),
     renderer = PIXI.autoDetectRenderer(512, 512);
@@ -28,85 +39,50 @@ $(function() {
   $('body').append(renderer.view);
 
 
-
   //Loading images into the texture cache
   loader
     .add("images/treasureHunter.json")
     .on("progress", loadProgressHandler)
-    .load(setup_json_sprite);
+    .load(setup_background)
+    .load(setup_players);
 
 
   //Function to console log load progress
   function loadProgressHandler(loader, resource) {
 
-    //Display the file `url` currently being loaded
-    // console.log("loading: " + resource.url);
-    console.log("loading: " + resource.name); //if name is supplied in .add
-
-
-    //Display the precentage of files currently loaded
+    console.log("loading: " + resource.name);
     console.log("progress: " + loader.progress + "%");
+
   }
 
-
-  var explorer,
-    treasure,
-    state;
-
-
-  function setup_json_sprite() {
-
-    //Converting all files specified into json file into textures
-    id = resources["images/treasureHunter.json"].textures;
-
-    //Assigning the variable to the newly created dungeon.png sprite from json
-    dungeon = new Sprite(id["dungeon.png"]);
-
-    //Add the converted sprite texture to the stage
+  function setup_background() {
+    convert = resources["images/treasureHunter.json"].textures;
+    dungeon = new Sprite(convert["dungeon.png"]);
     stage.addChild(dungeon);
+  }
 
-    socket.on('new player', ){
-      
-    }
-
-    //Assigning the variable to the newly created sprite from json
-    explorer = new Sprite(id["explorer.png"]);
-
+  function setup_players() {
+    convert = resources["images/treasureHunter.json"].textures;
 
     socket.on('newPositions', function(data) {
-      console.log(data[0].x);
-      explorer.x = data[0].x;
-      explorer.y = data[0].y;
+      for (var i = 0; i < data.length; i++) {
+        explorer = new Sprite(convert["explorer.png"]);
+        console.log(data);
+        explorer.x = data[i].x;
+        explorer.y = data[i].y;
+        // explorer.x = 250;
+        // explorer.y = 250;
+        stage.addChild(explorer);
+      }
     });
 
-    //Add the converted sprite texture to the stage
-    stage.addChild(explorer);
+    state = play;
 
-    //Tell the renderer to render the stage
-    renderer.render(stage);
-
-
-    // //Set the game state
-    // state = play;
-
-    //Start the game loop
     gameLoop();
+
   }
 
-
   function play() {
-
-    //Use the explorer velocity to make it move
-    explorer.x += explorer.vx;
-    explorer.y += explorer.vy;
-
-    //restricting the area of movement
-    contain(explorer, {
-      x: 28,
-      y: 10,
-      width: 488,
-      height: 480
-    });
 
   }
 
@@ -115,45 +91,61 @@ $(function() {
     //Loop this function 60 times per second
     requestAnimationFrame(gameLoop);
 
-    // //Update the current game state
-    // state();
+    state();
 
     //Render the stage
     renderer.render(stage);
   }
 
-  //Contain helper function
-  function contain(sprite, container) {
+  document.onkeydown = function(event) {
+    if (event.keyCode === 68) //d
+      socket.emit('keyPress', {
+      inputId: 'right',
+      state: true
+    });
+    else if (event.keyCode === 83) //s
+      socket.emit('keyPress', {
+      inputId: 'down',
+      state: true
+    });
+    else if (event.keyCode === 65) //a
+      socket.emit('keyPress', {
+      inputId: 'left',
+      state: true
+    });
+    else if (event.keyCode === 87) // w
+      socket.emit('keyPress', {
+      inputId: 'up',
+      state: true
+    });
 
-    var collision = undefined;
+  };
+  document.onkeyup = function(event) {
+    if (event.keyCode === 68) //d
+      socket.emit('keyPress', {
+      inputId: 'right',
+      state: false
+    });
+    else if (event.keyCode === 83) //s
+      socket.emit('keyPress', {
+      inputId: 'down',
+      state: false
+    });
+    else if (event.keyCode === 65) //a
+      socket.emit('keyPress', {
+      inputId: 'left',
+      state: false
+    });
+    else if (event.keyCode === 87) // w
+      socket.emit('keyPress', {
+      inputId: 'up',
+      state: false
+    });
+  };
 
-    //Left
-    if (explorer.x < container.x) {
-      explorer.x = container.x;
-      collision = "left";
-    }
 
-    //Top
-    if (explorer.y < container.y) {
-      explorer.y = container.y;
-      collision = "top";
-    }
 
-    //Right
-    if (explorer.x + explorer.width > container.width) {
-      explorer.x = container.width - explorer.width;
-      collision = "right";
-    }
 
-    //Bottom
-    if (explorer.y + explorer.height > container.height) {
-      explorer.y = container.height - explorer.height;
-      collision = "bottom";
-    }
-
-    //Return the `collision` value
-    return collision;
-  }
 
 
 });
