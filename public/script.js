@@ -1,13 +1,6 @@
 $(function() {
 
   var socket = io();
-  socket.on('newPositions', function(data) {
-  });
-
-  socket.on('socket id', function(data) {
-    socket_id = data;
-  });
-
 
   //Aliases
   var Container = PIXI.Container,
@@ -16,8 +9,8 @@ $(function() {
     resources = PIXI.loader.resources,
     Sprite = PIXI.Sprite,
     Rectangle = PIXI.Rectangle,
+    BitmapText = PIXI.extras.BitmapText,
     TextureCache = PIXI.utils.TextureCache;
-
 
   //Global variables
   var explorer,
@@ -28,13 +21,21 @@ $(function() {
     blob,
     blobs = {};
 
-    var sprite_array = {};
+  var sprite_array = {};
 
 
 
   //Create a stage & renderer add add it to the DOM
-  var stage = new Container(),
-    renderer = PIXI.autoDetectRenderer(512, 512);
+  var renderer = PIXI.autoDetectRenderer(512, 512, {backgroundColor: 'white'}),
+      stage = new Container(),
+      game = new Container(),
+      preload = new Container();
+
+      game.zIndex = 0;
+      preload.zIndex = 10;
+
+      stage.addChild(game);
+      stage.addChild(preload);
 
   $('body').append(renderer.view);
 
@@ -42,9 +43,12 @@ $(function() {
   //Loading images into the texture cache
   loader
     .add("images/treasureHunter.json")
+    .add("fonts/font.fnt")
     .on("progress", loadProgressHandler)
     .load(setup_background)
-    .load(setup_players);
+    .load(setup_players)
+    .load(setup_mainscreen);
+
 
 
   //Function to console log load progress
@@ -58,7 +62,7 @@ $(function() {
   function setup_background() {
     convert = resources["images/treasureHunter.json"].textures;
     dungeon = new Sprite(convert["dungeon.png"]);
-    stage.addChild(dungeon);
+    game.addChild(dungeon);
   }
 
   function setup_players() {
@@ -73,32 +77,60 @@ $(function() {
         sprite_array[data[i].id] = explorer;
         sprite_array[data[i].id].x = data[i].x;
         sprite_array[data[i].id].y = data[i].y;
-        stage.addChild(sprite_array[data[i].id]);
+        game.addChild(sprite_array[data[i].id]);
       }
-      socket.on('delete player', function(data){
+      socket.on('delete player', function(data) {
         console.log(data);
-        sprite_array[data].visible = false;
+        sprite_array[data].destroy();
       });
     });
-
-    state = play;
-
+    // state = play;
     gameLoop();
+}
 
+
+  function setup_mainscreen() {
+    var main_logo = new BitmapText('HELLO\nWORLD', {
+      font: "font",
+      align: "left"
+    });
+    main_logo.x = 75;
+    main_logo.y = 100;
+    var sub_text = new BitmapText('The journey of a\nfull-stack developer!', {
+      font: "font",
+      align: "center",
+    });
+    sub_text.height = 0.25 * sub_text.height;
+    sub_text.width = 0.25 * sub_text.width;
+    sub_text.tint = 0x336600;
+    sub_text.x = 70;
+    sub_text.y = 245;
+    var press_start = new BitmapText('CLICK TO START!', {
+      font: "font",
+      align: "center",
+    });
+    press_start.height = 0.25 * press_start.height;
+    press_start.width = 0.25 * press_start.width;
+    press_start.tint = 0x336600;
+    press_start.x = 120;
+    press_start.y = 350;
+    preload.addChild(main_logo);
+    preload.addChild(sub_text);
+    preload.addChild(press_start);
+    renderer.backgroundColor = '0xCCCCCC';
+    renderer.render(preload);
+    $(document).keypress(function(){
+      main_logo.visible = false;
+      preload.visible = false;
+      press_start.visible = false;
+    });
   }
 
-  function play() {
-
-  }
+  function play() {}
 
   function gameLoop() {
-
-    //Loop this function 60 times per second
     requestAnimationFrame(gameLoop);
-
-    state();
-
-    //Render the stage
+    // state();
     renderer.render(stage);
   }
 
@@ -147,10 +179,5 @@ $(function() {
       state: false
     });
   };
-
-
-
-
-
 
 });

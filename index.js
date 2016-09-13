@@ -46,7 +46,7 @@ io.on('connection', function(socket){
 var Player = function(id){
     var self = {
         x:250,
-        y:250,
+        y:300,
         width: 21,
         height: 32,
         id:id,
@@ -55,7 +55,7 @@ var Player = function(id){
         pressingLeft:false,
         pressingUp:false,
         pressingDown:false,
-        maxSpd:10,
+        maxSpd:5,
     };
     self.updatePosition = function(){
         container = {x: 28, y: 10, width: 488, height: 480};
