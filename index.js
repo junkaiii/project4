@@ -18,8 +18,7 @@ var SOCKET_LIST = {};
 var PLAYER_LIST = {};
 
 io.on('connection', function(socket){
-    console.log('a user disconnected');
-    socket.id = Math.random();
+    console.log('a user is connected' + socket.id);
     SOCKET_LIST[socket.id] = socket;
 
     var player = Player(socket.id);
@@ -76,7 +75,7 @@ setInterval(function(){
         pack.push({
             x:player.x,
             y:player.y,
-            number:player.number
+            id:player.id,
         });
     }
     for(var i in SOCKET_LIST){

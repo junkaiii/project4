@@ -30,6 +30,8 @@ $(function() {
     blob,
     blobs = {};
 
+    var sprite_array = null;
+
 
 
   //Create a stage & renderer add add it to the DOM
@@ -67,10 +69,23 @@ $(function() {
     socket.on('newPositions', function(data) {
       for (var i = 0; i < data.length; i++) {
         explorer = new Sprite(convert["explorer.png"]);
+        if (sprite_array != null){
+          sprite_array.destroy();
+        }
+        //retrieve the socket id
+        // sprite_array = {
+        //   socket_id : spriteeObj,
+        //   socket_id : spriteeObj
+        // }
+        // if (sprite_array[socket_id] != null){
+        //   sprite_array[socket_id].destroy();
+        // }
+        // sprite_array[socket_id] = explorer;
         console.log(data);
+        sprite_array = explorer
         explorer.x = data[i].x;
         explorer.y = data[i].y;
-        stage.addChild(explorer);
+        stage.addChild(sprite_array);
       }
     });
 
@@ -81,9 +96,6 @@ $(function() {
   }
 
   function play() {
-
-    explorer.x++;
-    explorer.y++;
 
   }
 
