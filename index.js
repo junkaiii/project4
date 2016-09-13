@@ -26,6 +26,7 @@ io.on('connection', function(socket){
 
     socket.on('disconnect',function(){
       console.log('a user disconnected');
+      io.emit('delete player', socket.id);
         delete SOCKET_LIST[socket.id];
         delete PLAYER_LIST[socket.id];
     });
