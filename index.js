@@ -6,9 +6,9 @@ var axios = require('axios');
 
 var SOCKET_LIST = {};
 
-app.get('/', function(req, res) {
-  res.sendfile('index.html');
-});
+// app.get('/', function(req, res) {
+//   res.sendfile('index.html');
+// });
 
 app.use(express.static('public'));
 
@@ -47,6 +47,8 @@ var Player = function(id){
     var self = {
         x:250,
         y:250,
+        width: 21,
+        height: 32,
         id:id,
         number:"" + Math.floor(10 * Math.random()),
         pressingRight:false,
@@ -56,6 +58,7 @@ var Player = function(id){
         maxSpd:10,
     };
     self.updatePosition = function(){
+        container = {x: 28, y: 10, width: 488, height: 480};
         if(self.pressingRight)
             self.x += self.maxSpd;
         if(self.pressingLeft)
@@ -64,9 +67,19 @@ var Player = function(id){
             self.y -= self.maxSpd;
         if(self.pressingDown)
             self.y += self.maxSpd;
+        if (self.x < container.x)
+            self.x = container.x;
+        if (self.y < container.y)
+          self.y = container.y;
+        if (self.x + self.width > container.width)
+          self.x = container.width - self.width;
+        if (self.y + self.height > container.height)
+          self.y = container.height - self.height;
     };
     return self;
+
 };
+
 
 setInterval(function(){
     var pack = [];

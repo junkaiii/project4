@@ -1,9 +1,7 @@
 $(function() {
 
   var socket = io();
-
   socket.on('newPositions', function(data) {
-
   });
 
   socket.on('socket id', function(data) {
