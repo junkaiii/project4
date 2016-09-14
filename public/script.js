@@ -118,11 +118,26 @@ $(function() {
     preload.addChild(sub_text);
     preload.addChild(press_start);
     renderer.backgroundColor = '0xCCCCCC';
+
+    var make_big = setInterval(function(){
+      press_start.height += 10;
+      press_start.width += 10;
+      renderer.render(preload);
+    },1000);
+
+    var make_small = setInterval(function(){
+      press_start.height -= 10;
+      press_start.width -= 10;
+      renderer.render(preload);
+    },300);
+
     renderer.render(preload);
     $(document).keypress(function(){
       main_logo.visible = false;
       preload.visible = false;
       press_start.visible = false;
+      // clearInterval(make_big);
+      // clearInterval(make_small);
     });
   }
 
